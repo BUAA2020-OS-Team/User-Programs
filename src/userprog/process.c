@@ -38,8 +38,22 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
+  /* Get exec_name from file_name. */
+  char *save_ptr;
+  char *exec_name = strtok_r(file_name, " ", &save_ptr);
+
+  /* Get argc and argv from rest of the file_name. */
+  /*char *arg;
+  for (arg = strtok_r (NULL, " ", &save_ptr); arg != NULL;
+        arg = strtok_r (NULL, " ", &save_ptr)) 
+    {}
+    
+    Not Implemented!
+
+    */
+
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (exec_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
@@ -222,8 +236,12 @@ load (const char *file_name, void (**eip) (void), void **esp)
     goto done;
   process_activate ();
 
+  /* Get exec_name from file_name. */
+  char *save_ptr;
+  char *exec_name = strtok_r(file_name, " ", &save_ptr);
+
   /* Open executable file. */
-  file = filesys_open (file_name);
+  file = filesys_open (exec_name);
   if (file == NULL) 
     {
       printf ("load: %s: open failed\n", file_name);
