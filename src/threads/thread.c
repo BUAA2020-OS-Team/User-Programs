@@ -284,6 +284,7 @@ thread_exit (void)
 
 #ifdef USERPROG
   process_exit ();
+  sema_up(&thread_current()->parent->some_semaphore);
 #endif
 
   /* Remove thread from all threads list, set our status to dying,
@@ -477,6 +478,12 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
+
+#ifdef USERPROG
+  sema_init(&t->some_semaphore, 0);
+  if (t != init_thread)
+    t->parent = thread_current ();
+#endif
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
