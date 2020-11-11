@@ -34,8 +34,9 @@ syscall_handler (struct intr_frame *f UNUSED)
     case SYS_EXIT:
     {
       // Implement syscall EXIT
-      int status = 0;   // 暂时没想明白status保存在哪，先做简单处理。
+      int status = *((int*)f->esp + 1);
       printf ("%s: exit(%d)\n", thread_current()->name, status);
+      exit (status);
       break;
     }
     case SYS_EXEC:
@@ -76,6 +77,12 @@ syscall_handler (struct intr_frame *f UNUSED)
     case SYS_WRITE:
     {
       // Implement syscall WRITE
+      int fd = *((int*)f->esp + 1);
+      void* buffer = (void*)(*((int*)f->esp + 2));
+      unsigned size = *((unsigned*)f->esp + 3);
+      //run the syscall, a function of your own making
+      //since this syscall returns a value, the return value should be stored in f->eax
+      f->eax = write(fd, buffer, size);
       break;
     }
     case SYS_SEEK:
