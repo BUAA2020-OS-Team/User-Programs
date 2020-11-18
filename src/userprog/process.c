@@ -210,7 +210,7 @@ struct Elf32_Phdr
 #define PF_W 2          /* Writable. */
 #define PF_R 4          /* Readable. */
 
-static bool setup_stack (void **esp);
+static bool setup_stack (void **esp, char *file_name);
 static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
@@ -321,7 +321,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
     }
 
   /* Set up stack. */
-  if (!setup_stack (esp))
+  if (!setup_stack (esp, file_name))
     goto done;
 
   /* Start address. */
@@ -446,7 +446,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 /* Create a minimal stack by mapping a zeroed page at the top of
    user virtual memory. */
 static bool
-setup_stack (void **esp) 
+setup_stack (void **esp, char *file_name) 
 {
   uint8_t *kpage;
   bool success = false;
@@ -456,7 +456,46 @@ setup_stack (void **esp)
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
       if (success)
+      {
         *esp = PHYS_BASE;
+        /* 初始化栈 */
+        char *save_ptr, *str, *subtoken;
+        int sum_len = 0, argc = 0;
+        size_t len;
+        for (str = file_name; ; str = NULL)
+        {
+            subtoken = strtok_r(str, " ", &save_ptr);
+            if (subtoken == NULL)
+                break;
+            len = strlen(subtoken);
+            *esp -= len;
+            sum_len += len;
+            argc++;
+            memcpy(*esp, subtoken, strlen(subtoken));
+        }
+        int align = 4 - (sum_len % 4);
+        if (align < 4)
+          align += 4;
+        *esp -= align;
+        memset(*esp, 0, align);
+        char *cp;
+        for(cp = *esp; cp < PHYS_BASE-1; cp++)
+        {
+          if (*cp == '\0')
+          {
+            *esp -= 4;
+            cp++;
+            memcpy(*esp, &cp, 4);
+          }
+        }
+        void *old_esp = *esp;
+        *esp -= 4;
+        memcpy(*esp, &old_esp, 4);
+        *esp -= 4;
+        memcpy(*esp, &argc, 4);
+        *esp -= 4;
+        memset(*esp, 0, 4);
+      }
       else
         palloc_free_page (kpage);
     }
