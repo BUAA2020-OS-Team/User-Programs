@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "ostream": "c",
+        "algorithm": "c",
+        "*.inc": "c"
+    }
+}
