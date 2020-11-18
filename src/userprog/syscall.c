@@ -117,6 +117,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 static void exit(int status) {
   printf ("%s: exit(%d)\n", thread_current()->name, status);
   thread_exit();
+  sema_up(&thread_current()->parent->some_semaphore);
 }
 
 static int write(int fd, const void* buffer, unsigned size) {

@@ -284,7 +284,6 @@ thread_exit (void)
 
 #ifdef USERPROG
   process_exit ();
-  sema_up(&thread_current()->parent->some_semaphore);
 #endif
 
   /* Remove thread from all threads list, set our status to dying,
