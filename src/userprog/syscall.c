@@ -6,8 +6,10 @@
 #include "threads/thread.h"
 #include "userprog/pagedir.h"
 #include "threads/vaddr.h"
+#include "threads/init.h"
 
 static void syscall_handler (struct intr_frame *);
+static void halt(void);
 static void exit(int status);
 static int write(int fd, const void* buffer, unsigned size);
 
@@ -41,6 +43,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     case SYS_HALT:
     {
       // Implement syscall HALT
+
       break;
     }
     case SYS_EXIT:
@@ -114,13 +117,17 @@ syscall_handler (struct intr_frame *f UNUSED)
   }
 }
 
-static void exit(int status) {
+static void halt (void) {
+  shutdown_power_off ();
+}
+
+static void exit (int status) {
   printf ("%s: exit(%d)\n", thread_current()->name, status);
   thread_exit();
   sema_up(&thread_current()->parent->some_semaphore);
 }
 
-static int write(int fd, const void* buffer, unsigned size) {
+static int write (int fd, const void* buffer, unsigned size) {
   if (fd == 1)
   {
     putbuf ((char*)buffer, size);
