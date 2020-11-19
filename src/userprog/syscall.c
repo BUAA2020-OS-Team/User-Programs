@@ -43,7 +43,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     case SYS_HALT:
     {
       // Implement syscall HALT
-
+      halt ();
       break;
     }
     case SYS_EXIT:
@@ -123,8 +123,8 @@ static void halt (void) {
 
 static void exit (int status) {
   printf ("%s: exit(%d)\n", thread_current()->name, status);
-  thread_exit();
   sema_up(&thread_current()->parent->some_semaphore);
+  thread_exit();
 }
 
 static int write (int fd, const void* buffer, unsigned size) {
