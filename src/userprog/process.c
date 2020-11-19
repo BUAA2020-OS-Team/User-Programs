@@ -461,10 +461,10 @@ setup_stack (void **esp, char *file_name)
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
       if (success)
       {
-        #define SIMPLE_IMPL
-        *esp = PHYS_BASE - 12;
-        /* 初始化栈 */
-        #ifndef SIMPLE_IMPL
+        // #define SIMPLE_IMPL
+        // *esp = PHYS_BASE - 12;
+        // /* 初始化栈 */
+        // #ifndef SIMPLE_IMPL
         char *save_ptr, *str, *subtoken;
         int sum_len = 0, argc = 0;
         size_t len;
@@ -501,7 +501,7 @@ setup_stack (void **esp, char *file_name)
         memcpy(*esp, &argc, 4);
         *esp -= 4;
         memset(*esp, 0, 4);
-        #endif
+        //#endif
       }
       else
         palloc_free_page (kpage);

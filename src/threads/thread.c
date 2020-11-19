@@ -481,7 +481,7 @@ init_thread (struct thread *t, const char *name, int priority)
 #ifdef USERPROG
   sema_init(&t->some_semaphore, 0);
   if (t != init_thread)
-    t->parent = thread_current ();
+    t->parent = running_thread ();
 #endif
 
   old_level = intr_disable ();

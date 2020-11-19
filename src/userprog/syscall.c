@@ -7,6 +7,7 @@
 #include "userprog/pagedir.h"
 #include "threads/vaddr.h"
 #include "threads/init.h"
+#include "devices/shutdown.h"
 
 static void syscall_handler (struct intr_frame *);
 static void halt(void);
@@ -25,17 +26,19 @@ syscall_handler (struct intr_frame *f UNUSED)
   // printf ("system call!\n");
   // thread_exit ();
   // first check if f->esp is a valid pointer)
-  if (is_user_vaddr (f->esp) && f->esp > 0x08048000)
-  {
-    if (pagedir_get_page (thread_current()->pagedir, f->esp) != NULL)
-    {
-      exit (-1);
-    }
-  }
-  else
-  {
-    exit (-1);
-  }
+
+  /* 这里的判断应该是有问题的 */
+  // if (is_user_vaddr (f->esp) && f->esp > 0x08048000)
+  // {
+  //   if (pagedir_get_page (thread_current()->pagedir, f->esp) != NULL)
+  //   {
+  //     exit (-1);
+  //   }
+  // }
+  // else
+  // {
+  //   exit (-1);
+  // }
   
   // cast f->esp into an int*, then dereference it for the SYS_CODE
   switch(*(int*)f->esp)
@@ -132,4 +135,5 @@ static int write (int fd, const void* buffer, unsigned size) {
   {
     putbuf ((char*)buffer, size);
   }
+  return size;
 }
