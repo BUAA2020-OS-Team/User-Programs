@@ -103,7 +103,11 @@ int
 process_wait (tid_t child_tid UNUSED) 
 {
   // return -1;
-  sema_down(&thread_current()->some_semaphore);
+  // sema_down(&thread_current()->some_semaphore);
+  while (true)
+  {
+    thread_yield ();
+  }
 }
 
 /* Free the current process's resources. */
