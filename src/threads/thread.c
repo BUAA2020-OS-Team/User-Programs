@@ -482,6 +482,8 @@ init_thread (struct thread *t, const char *name, int priority)
   sema_init(&t->some_semaphore, 0);
   if (t != init_thread)
     t->parent = running_thread ();
+  t->fd = 1;
+  list_init (&t->file_list);
 #endif
 
   old_level = intr_disable ();
