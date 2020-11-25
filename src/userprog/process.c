@@ -504,9 +504,10 @@ setup_stack (void **esp, char *file_name)
         memset(*esp, 0, 4);
         //#endif
         // 查看内存
+        /*
         for (int *p = *esp; p < PHYS_BASE; p++) {
           printf ("Address: %p, value: %x\n", p, *p);
-        }
+        }*/
       }
       else
         palloc_free_page (kpage);
