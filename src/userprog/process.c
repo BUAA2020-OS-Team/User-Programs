@@ -471,7 +471,7 @@ setup_stack (void **esp, char *file_name)
         char *save_ptr, *str, *subtoken;
         int sum_len = 0, argc = 0;
         char file[100];
-        strncpy(file, file_name, 100);
+        strlcpy(file, file_name, 100);
         char delim[] = {' ', '\t', '\0', '\n'};
         void* addr[20];
         size_t len;
