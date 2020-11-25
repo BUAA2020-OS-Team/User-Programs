@@ -160,7 +160,7 @@ static void halt (void)
 static void exit (int status) 
 {
   printf ("%s: exit(%d)\n", thread_current()->name, status);
-  // sema_up(&thread_current()->parent->some_semaphore);
+  sema_up(&thread_current()->parent->some_semaphore);
   thread_exit();
 }
 

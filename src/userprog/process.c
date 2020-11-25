@@ -103,11 +103,13 @@ int
 process_wait (tid_t child_tid UNUSED) 
 {
   // return -1;
-  // sema_down(&thread_current()->some_semaphore);
+  sema_down(&thread_current()->some_semaphore);
+  /*
   while (true)
   {
     thread_yield ();
-  }
+  }*/
+  return 0;
 }
 
 /* Free the current process's resources. */
@@ -465,6 +467,7 @@ setup_stack (void **esp, char *file_name)
         // *esp = PHYS_BASE - 12;
         // /* 初始化栈 */
         // #ifndef SIMPLE_IMPL
+        *esp = PHYS_BASE;
         char *save_ptr, *str, *subtoken;
         int sum_len = 0, argc = 0;
         size_t len;
