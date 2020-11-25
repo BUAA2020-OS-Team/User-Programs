@@ -23,6 +23,9 @@ static void syscall_handler (struct intr_frame *);
 static void halt(void);
 static void exit(int status);
 static int write(int fd, const void* buffer, unsigned size);
+static unsigned tell (int fd);
+static void seek (int fd, unsigned position);
+static void close (int fd);
 
 void
 syscall_init (void) 
