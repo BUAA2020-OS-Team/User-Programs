@@ -11,16 +11,23 @@
 #include "process.h"
 #include "filesys/filesys.h"
 
+typedef int pid_t;
+
 // fd与文件对应
 struct file_fd
 {
   struct file *file;
   int fd;
-  struct list_elem *file_elem;
+  struct list_elem file_elem;
 };
 
 static void syscall_handler (struct intr_frame *);
 static void halt(void);
+static pid_t exec (char *cmd_line);
+static bool create (char *file, int initial_size);
+static bool remove (char *file);
+static int open (char *file);
+static int filesize (int fd);
 static void exit(int status);
 static int read (int fd, const void* buffer, unsigned size);
 static int write(int fd, const void* buffer, unsigned size);
@@ -204,9 +211,9 @@ static int open (char *file)
 
 static int filesize (int fd) 
 {
-  struct list *file_list = thread_current ()->file_list;
+  struct list *file_list = &thread_current ()->file_list;
   struct list_elem *e;
-  for (e = list_begin (&file_list); e != list_end (&file_list);
+  for (e = list_begin (file_list); e != list_end (file_list);
        e = list_next (e))
     {
       struct file_fd *file_fd = list_entry (e, struct file_fd, file_elem);
