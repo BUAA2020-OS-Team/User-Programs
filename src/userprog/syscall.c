@@ -49,17 +49,17 @@ syscall_handler (struct intr_frame *f UNUSED)
   // first check if f->esp is a valid pointer)
 
   /* 这里的判断应该是有问题的 */
-  // if (is_user_vaddr (f->esp) && f->esp > 0x08048000)
-  // {
-  //   if (pagedir_get_page (thread_current()->pagedir, f->esp) != NULL)
-  //   {
-  //     exit (-1);
-  //   }
-  // }
-  // else
-  // {
-  //   exit (-1);
-  // }
+  if (is_user_vaddr (f->esp) && f->esp > (void*)0x08048000)
+  {
+    if (pagedir_get_page (thread_current()->pagedir, f->esp) != NULL)
+    {
+      exit (-1);
+    }
+  }
+  else
+  {
+    exit (-1);
+  }
   
   // cast f->esp into an int*, then dereference it for the SYS_CODE
   switch(*(int*)f->esp)
