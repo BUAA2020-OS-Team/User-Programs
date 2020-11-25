@@ -470,32 +470,30 @@ setup_stack (void **esp, char *file_name)
         *esp = PHYS_BASE;
         char *save_ptr, *str, *subtoken;
         int sum_len = 0, argc = 0;
+        char file[100];
+        strncpy(file, file_name, 100);
+        char delim[] = {' ', '\t', '\0', '\n'};
+        void* addr[20];
         size_t len;
-        for (str = file_name; ; str = NULL)
+        for (str = file; ; str = NULL)
         {
-            subtoken = strtok_r(str, " ", &save_ptr);
+            subtoken = strtok_r(str, delim, &save_ptr);
             if (subtoken == NULL)
                 break;
-            len = strlen(subtoken);
+            len = strlen(subtoken)+1;
             *esp -= len;
             sum_len += len;
-            argc++;
-            memcpy(*esp, subtoken, strlen(subtoken));
+            addr[argc++] = *esp;
+            memcpy(*esp, subtoken, len);
         }
         int align = 4 - (sum_len % 4);
         if (align < 4)
           align += 4;
         *esp -= align;
         memset(*esp, 0, align);
-        char *cp;
-        for(cp = *esp; cp < PHYS_BASE-1; cp++)
-        {
-          if (*cp == '\0')
-          {
-            *esp -= 4;
-            cp++;
-            memcpy(*esp, &cp, 4);
-          }
+        for (int i = 0; i < argc; i++) {
+          *esp -= 4;
+          memcpy(*esp, &addr[i], 4);
         }
         void *old_esp = *esp;
         *esp -= 4;
