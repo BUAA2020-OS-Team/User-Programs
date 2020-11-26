@@ -468,7 +468,7 @@ setup_stack (void **esp, char *file_name)
         // /* 初始化栈 */
         // #ifndef SIMPLE_IMPL
         *esp = PHYS_BASE;
-        printf("%s\n", file_name);
+        // printf("%s\n", file_name);
         // char *save_ptr = file_name, *str, *subtoken;
         int sum_len = 0, argc = 0;
         char *p = file_name;
