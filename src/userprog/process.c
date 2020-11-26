@@ -469,33 +469,33 @@ setup_stack (void **esp, char *file_name)
         // #ifndef SIMPLE_IMPL
         *esp = PHYS_BASE;
         // printf("%s\n", file_name);
-        // char *save_ptr = file_name, *str, *subtoken;
+        char *save_ptr = file_name, *str, *subtoken;
         int sum_len = 0, argc = 0;
         char *p = file_name;
         // char file[100];
         // strlcpy(file, file_name, 100);
         char delim[] = {' ', '\t', '\0', '\n'};
-        char subtoken[100];
         void* addr[30];
         size_t len;
         while (1) {
-            // subtoken = strtok_r(NULL, delim, &save_ptr);
+            subtoken = strtok_r(NULL, " ", &save_ptr);
+            if (subtoken == NULL)
+            {
+              break;
+            }
+            /*
             size_t i;
             for (;*p == ' '; p++){}
             for (i = 0; *p != ' ' && *p != '\0' && *p != '\n'; i++, p++)
             {
               subtoken[i] = *p;
             }
-            subtoken[i] = '\0';
+            subtoken[i] = '\0';*/
             len = strlen(subtoken)+1;
             *esp -= len;
             sum_len += len;
             addr[argc++] = *esp;
             memcpy(*esp, subtoken, len);
-            if (*p == '\0' && *p != '\n')
-            {
-              break;
-            }
         }
         int align = 4 - (sum_len % 4);
         if (align < 4)
