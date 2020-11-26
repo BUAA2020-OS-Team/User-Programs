@@ -476,7 +476,7 @@ setup_stack (void **esp, char *file_name)
         {
           printf("char: %c, value: %d\n", *p, *p);
         }
-        char *p = file_name;
+        p = file_name;
         // char file[100];
         // strlcpy(file, file_name, 100);
         char subtoken[100];
