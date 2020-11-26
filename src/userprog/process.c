@@ -497,7 +497,7 @@ setup_stack (void **esp, char *file_name)
             sum_len += len;
             addr[argc++] = *esp;
             memcpy(*esp, subtoken, len);
-            if (*p == '\0')
+            if (*p == '\0' && *(p+1) == '\0')
             {
               break;
             }
