@@ -469,14 +469,12 @@ setup_stack (void **esp, char *file_name)
         // #ifndef SIMPLE_IMPL
         *esp = PHYS_BASE;
         char *save_ptr = file_name, *subtoken;
+        char* stack[30];
+        int top = -1;
         int sum_len = 0, argc = 0;
         void* addr[30];
         size_t len;
-        len = strlen(save_ptr)+1;
-        *esp -= len;
-        sum_len += len;
-        addr[argc++] = *esp;
-        memcpy(*esp, save_ptr, len);
+        stack[++top] = save_ptr;
         for (; *save_ptr != 0; save_ptr++) {}
         save_ptr++;
         while (1)
@@ -486,11 +484,16 @@ setup_stack (void **esp, char *file_name)
           {
             break;
           }
-          len = strlen(subtoken)+1;
+          stack[++top] = subtoken;
+        }
+        while (top != -1)
+        {
+          char *arg = stack[top--];
+          len = strlen(arg)+1;
           *esp -= len;
           sum_len += len;
           addr[argc++] = *esp;
-          memcpy(*esp, subtoken, len);
+          memcpy(*esp, arg, len);
         }
         int align = 4 - (sum_len % 4);
         if (align < 4)
