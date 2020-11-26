@@ -468,34 +468,24 @@ setup_stack (void **esp, char *file_name)
         // /* 初始化栈 */
         // #ifndef SIMPLE_IMPL
         *esp = PHYS_BASE;
-        // printf("%s\n", file_name);
-        // char *save_ptr = file_name, *str, *subtoken;
+        char *save_ptr = file_name, *subtoken;
         int sum_len = 0, argc = 0;
-        char *p = file_name;
-        /*
-        for (size_t i = 0; i < 100; i++,p++)
-        {
-          printf("char: %c, value: %d\n", *p, *p);
-        }
-        p = file_name;*/
-        // char file[100];
-        // strlcpy(file, file_name, 100);
-        char subtoken[100];
-        char delim[] = {' ', '\t', '\0', '\n'};
         void* addr[30];
         size_t len;
-        for (size_t i = 0; i < 100; i++)
+        len = strlen(save_ptr)+1;
+        *esp -= len;
+        sum_len += len;
+        addr[argc++] = *esp;
+        memcpy(*esp, save_ptr, len);
+        for (; *save_ptr != 0; save_ptr++) {}
+        save_ptr++;
+        while (1)
         {
-          if (file_name[i] == 0)
+          subtoken = strtok_r (NULL, " ", &save_ptr);
+          if (subtoken == NULL)
           {
-            continue;
+            break;
           }
-          size_t j;
-          for (j = 0; file_name[i] != 0; i++, j++)
-          {
-            subtoken[j] = file_name[i];
-          }
-          subtoken[j] = '\0';
           len = strlen(subtoken)+1;
           *esp -= len;
           sum_len += len;
