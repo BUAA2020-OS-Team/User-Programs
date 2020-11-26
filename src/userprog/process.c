@@ -472,40 +472,35 @@ setup_stack (void **esp, char *file_name)
         // char *save_ptr = file_name, *str, *subtoken;
         int sum_len = 0, argc = 0;
         char *p = file_name;
+        /*
         for (size_t i = 0; i < 100; i++,p++)
         {
           printf("char: %c, value: %d\n", *p, *p);
         }
-        p = file_name;
+        p = file_name;*/
         // char file[100];
         // strlcpy(file, file_name, 100);
         char subtoken[100];
         char delim[] = {' ', '\t', '\0', '\n'};
         void* addr[30];
         size_t len;
-        while (1) {
-          /*
-            subtoken = strtok_r(NULL, " ", &save_ptr);
-            if (subtoken == NULL)
-            {
-              break;
-            }*/
-            size_t i;
-            for (;*p == 20; p++){}
-            for (i = 0; *p != 20 && *p != 0; i++, p++)
-            {
-              subtoken[i] = *p;
-            }
-            subtoken[i] = '\0';
-            len = strlen(subtoken)+1;
-            *esp -= len;
-            sum_len += len;
-            addr[argc++] = *esp;
-            memcpy(*esp, subtoken, len);
-            if (*p == 0)
-            {
-              break;
-            }
+        for (size_t i = 0; i < 100; i++)
+        {
+          if (file_name[i] == 0)
+          {
+            continue;
+          }
+          size_t j;
+          for (j = 0; file_name[i] != 0; i++, j++)
+          {
+            subtoken[j] = file_name[i];
+          }
+          subtoken[j] = '\0';
+          len = strlen(subtoken)+1;
+          *esp -= len;
+          sum_len += len;
+          addr[argc++] = *esp;
+          memcpy(*esp, subtoken, len);
         }
         int align = 4 - (sum_len % 4);
         if (align < 4)
