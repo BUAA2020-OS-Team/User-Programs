@@ -472,6 +472,11 @@ setup_stack (void **esp, char *file_name)
         // char *save_ptr = file_name, *str, *subtoken;
         int sum_len = 0, argc = 0;
         char *p = file_name;
+        for (size_t i = 0; i < 100; i++,p++)
+        {
+          printf("char: %c, value: %d\n", *p, *p);
+        }
+        char *p = file_name;
         // char file[100];
         // strlcpy(file, file_name, 100);
         char subtoken[100];
