@@ -482,7 +482,7 @@ setup_stack (void **esp, char *file_name)
             // subtoken = strtok_r(NULL, delim, &save_ptr);
             size_t i;
             for (;*p == ' '; p++){}
-            for (i = 0; *p != ' '; i++, p++)
+            for (i = 0; *p != ' ' && *p != '\0' && *p != '\n'; i++, p++)
             {
               subtoken[i] = *p;
             }
@@ -492,7 +492,7 @@ setup_stack (void **esp, char *file_name)
             sum_len += len;
             addr[argc++] = *esp;
             memcpy(*esp, subtoken, len);
-            if (*p == '\0')
+            if (*p == '\0' && *p != '\n')
             {
               break;
             }
