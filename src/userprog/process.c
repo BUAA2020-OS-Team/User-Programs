@@ -468,14 +468,14 @@ setup_stack (void **esp, char *file_name)
         // /* 初始化栈 */
         // #ifndef SIMPLE_IMPL
         *esp = PHYS_BASE;
-        char *save_ptr, *str, *subtoken;
+        char *save_ptr = NULL, *str, *subtoken;
         int sum_len = 0, argc = 0;
-        char file[100];
-        strlcpy(file, file_name, 100);
+        // char file[100];
+        // strlcpy(file, file_name, 100);
         char delim[] = {' ', '\t', '\0', '\n'};
         void* addr[20];
         size_t len;
-        for (str = file; ; str = NULL)
+        for (str = file_name; ; str = NULL)
         {
             subtoken = strtok_r(str, delim, &save_ptr);
             if (subtoken == NULL)
