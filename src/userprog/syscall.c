@@ -10,6 +10,7 @@
 #include "devices/shutdown.h"
 #include "process.h"
 #include "filesys/filesys.h"
+#include "filesys/file.h"
 
 typedef int pid_t;
 
@@ -29,8 +30,8 @@ static bool remove (char *file);
 static int open (char *file);
 static int filesize (int fd);
 static void exit(int status);
-static int read (int fd, const void* buffer, unsigned size);
-static int write(int fd, const void* buffer, unsigned size);
+static int read (int fd, char* buffer, unsigned size);
+static int write(int fd, void* buffer, unsigned size);
 static unsigned tell (int fd);
 static void seek (int fd, unsigned position);
 static void close (int fd);
@@ -125,7 +126,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     {
       // Implement syscall READ
       int fd = *((int*)f->esp + 1);
-      void* buffer = (void*)(*((int*)f->esp + 2));
+      char* buffer = (char*)(*((int*)f->esp + 2));
       unsigned size = *((unsigned*)f->esp + 3);
       f->eax = read(fd, buffer, size);
       break;
@@ -200,63 +201,166 @@ static int open (char *file)
   }
   else
   {
-    thread_current ()->fd ++;
+    thread_current ()->fd = thread_current ()->fd + 1;
     int fd = thread_current ()->fd;
-    struct file_fd *file_fd;
-    file_fd->file = f;
-    file_fd->fd = fd;
-    list_push_back (&thread_current ()->file_list, &file_fd->file_elem);
+    struct file_fd *ff = malloc(sizeof(*ff));
+    ff->file = f;
+    ff->fd = fd;
+    list_push_back (&thread_current ()->file_list, &ff->file_elem);
     return fd;
   }
 }
 
 static int filesize (int fd) 
 {
-  struct list *file_list = &thread_current ()->file_list;
+  struct list file_list = thread_current ()->file_list;
   struct list_elem *e;
-  for (e = list_begin (file_list); e != list_end (file_list);
+  for (e = list_begin (&file_list); e != list_end (&file_list);
        e = list_next (e))
     {
-      struct file_fd *file_fd = list_entry (e, struct file_fd, file_elem);
-      if (file_fd->fd == fd)
+      struct file_fd *ff = list_entry (e, struct file_fd, file_elem);
+      if (ff->fd == fd)
       {
-        struct file *file = file_fd->file;
-        return file_length (file);
+        return file_length (ff->file);
       }
     }
     return 0;
 }
 
-static int read (int fd, const void* buffer, unsigned size)
+static int read (int fd, char *buffer, unsigned size)
 {
   // Not implement.
-  return -1;
+  if (fd == 1)
+    return -1;
+  int i = 0;
+  if (fd == 0)
+  {
+    // Read from stdin
+    while (i < size)
+    {
+      uint8_t key = input_getc();
+      //memset ((char*)buffer, key, 1);
+      buffer[i] = key;
+      i++;
+    }
+    return size;
+  }
+  else
+  {
+    struct list file_list = thread_current ()->file_list;
+    struct list_elem *e;
+    struct file *f = NULL;
+    for (e = list_begin (&file_list); e != list_end (&file_list);
+       e = list_next (e))
+    {
+      struct file_fd *ff = list_entry (e, struct file_fd, file_elem);
+      if (ff->fd == fd)
+      {
+        f = ff->file;
+        break;
+      }
+    }
+    if (f == NULL)
+      return -1;
+    return file_read (f, (void *)buffer, size);
+  }
 }
 
-static int write (int fd, const void* buffer, unsigned size) 
+static int write (int fd, void* buffer, unsigned size) 
 {
   if (fd == 1)
   {
     putbuf ((char*)buffer, size);
+    return size;
   }
-  // Not implement.
-  return size;
+  if (fd == 0)
+    return -1;
+  else
+  {
+    struct list file_list = thread_current ()->file_list;
+    struct list_elem *e;
+    struct file *f = NULL;
+    for (e = list_begin (&file_list); e != list_end (&file_list);
+        e = list_next (e))
+    {
+      struct file_fd *ff = list_entry (e, struct file_fd, file_elem);
+      if (ff->fd == fd)
+      {
+        f = ff->file;
+        break;
+      }
+    }
+    if (f == NULL)
+      return -1;
+    return file_write (f, buffer, size);
+  }
+  
 }
 
 static void seek (int fd, unsigned position) 
 {
   // Not implement.
+  struct list file_list = thread_current ()->file_list;
+  struct list_elem *e;
+  struct file *f = NULL;
+  for (e = list_begin (&file_list); e != list_end (&file_list);
+      e = list_next (e))
+  {
+    struct file_fd *ff = list_entry (e, struct file_fd, file_elem);
+    if (ff->fd == fd)
+    {
+      f = ff->file;
+      break;
+    }
+  }
+  if (f == NULL)
+    return;
+  file_seek (f, position);
   return ;
 }
 
 static unsigned tell (int fd)
 {
   // Not implement.
-  return 0;
+  struct list file_list = thread_current ()->file_list;
+  struct list_elem *e;
+  struct file *f = NULL;
+  for (e = list_begin (&file_list); e != list_end (&file_list);
+      e = list_next (e))
+  {
+    struct file_fd *ff = list_entry (e, struct file_fd, file_elem);
+    if (ff->fd == fd)
+    {
+      f = ff->file;
+      break;
+    }
+  }
+  if (f == NULL)
+    return 0;
+  return file_tell (f);
 }
 
 static void close (int fd) 
 {
   // Not implement.
-  return ;
+  if (fd == 0 || fd == 1)
+    return ;
+  struct list file_list = thread_current ()->file_list;
+  struct list_elem *e;
+  struct file *f = NULL;
+  struct file_fd *ff;
+  for (e = list_begin (&file_list); e != list_end (&file_list);
+      e = list_next (e))
+  {
+    ff = list_entry (e, struct file_fd, file_elem);
+    if (ff->fd == fd)
+    {
+      f = ff->file;
+      break;
+    }
+  }
+  if (f == NULL)
+    return ;
+  list_remove (&ff->file_elem);
+  file_close (f);
 }
