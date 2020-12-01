@@ -30,7 +30,7 @@ static bool remove (char *file);
 static int open (char *file);
 static int filesize (int fd);
 static void exit(int status);
-static int read (int fd, char* buffer, unsigned size);
+static int read (int fd, void* buffer, unsigned size);
 static int write(int fd, void* buffer, unsigned size);
 static unsigned tell (int fd);
 static void seek (int fd, unsigned position);
@@ -126,7 +126,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     {
       // Implement syscall READ
       int fd = *((int*)f->esp + 1);
-      char* buffer = (char*)(*((int*)f->esp + 2));
+      void* buffer = (void*)(*((int*)f->esp + 2));
       unsigned size = *((unsigned*)f->esp + 3);
       f->eax = read(fd, buffer, size);
       break;
@@ -184,6 +184,8 @@ static pid_t exec (char *cmd_line)
 
 static bool create (char *file, int initial_size) 
 {
+  if (file == NULL)
+    exit(-1);
   return filesys_create(file, initial_size);
 }
 
@@ -194,6 +196,8 @@ static bool remove (char *file)
 
 static int open (char *file) 
 {
+  if (file == NULL)
+    return -1;
   struct file *f = filesys_open (file);
   if (f == NULL) 
   {
@@ -213,9 +217,10 @@ static int open (char *file)
 
 static int filesize (int fd) 
 {
-  struct list file_list = thread_current ()->file_list;
+  if (fd > thread_current ()->fd)
+    return 0;
   struct list_elem *e;
-  for (e = list_begin (&file_list); e != list_end (&file_list);
+  for (e = list_begin (&thread_current ()->file_list); e != list_end (&thread_current ()->file_list);
        e = list_next (e))
     {
       struct file_fd *ff = list_entry (e, struct file_fd, file_elem);
@@ -227,15 +232,16 @@ static int filesize (int fd)
     return 0;
 }
 
-static int read (int fd, char *buffer, unsigned size)
+static int read (int fd, void *buffer, unsigned size)
 {
-  // Not implement.
-  if (fd == 1)
+  
+  if (fd == 1 || fd > thread_current ()->fd)
     return -1;
   int i = 0;
   if (fd == 0)
   {
     // Read from stdin
+    char *buffer = buffer;
     while (i < size)
     {
       uint8_t key = input_getc();
@@ -247,10 +253,9 @@ static int read (int fd, char *buffer, unsigned size)
   }
   else
   {
-    struct list file_list = thread_current ()->file_list;
     struct list_elem *e;
     struct file *f = NULL;
-    for (e = list_begin (&file_list); e != list_end (&file_list);
+    for (e = list_begin (&thread_current ()->file_list); e != list_end (&thread_current ()->file_list);
        e = list_next (e))
     {
       struct file_fd *ff = list_entry (e, struct file_fd, file_elem);
@@ -262,7 +267,7 @@ static int read (int fd, char *buffer, unsigned size)
     }
     if (f == NULL)
       return -1;
-    return file_read (f, (void *)buffer, size);
+    return file_read (f, buffer, size);
   }
 }
 
@@ -273,14 +278,13 @@ static int write (int fd, void* buffer, unsigned size)
     putbuf ((char*)buffer, size);
     return size;
   }
-  if (fd == 0)
+  if (fd == 0 || fd > thread_current ()->fd)
     return -1;
   else
   {
-    struct list file_list = thread_current ()->file_list;
     struct list_elem *e;
     struct file *f = NULL;
-    for (e = list_begin (&file_list); e != list_end (&file_list);
+    for (e = list_begin (&thread_current ()->file_list); e != list_end (&thread_current ()->file_list);
         e = list_next (e))
     {
       struct file_fd *ff = list_entry (e, struct file_fd, file_elem);
@@ -299,11 +303,11 @@ static int write (int fd, void* buffer, unsigned size)
 
 static void seek (int fd, unsigned position) 
 {
-  // Not implement.
-  struct list file_list = thread_current ()->file_list;
+  if (fd > thread_current ()->fd)
+    return;
   struct list_elem *e;
   struct file *f = NULL;
-  for (e = list_begin (&file_list); e != list_end (&file_list);
+  for (e = list_begin (&thread_current ()->file_list); e != list_end (&thread_current ()->file_list);
       e = list_next (e))
   {
     struct file_fd *ff = list_entry (e, struct file_fd, file_elem);
@@ -321,11 +325,11 @@ static void seek (int fd, unsigned position)
 
 static unsigned tell (int fd)
 {
-  // Not implement.
-  struct list file_list = thread_current ()->file_list;
+  if (fd > thread_current ()->fd)
+    return;
   struct list_elem *e;
   struct file *f = NULL;
-  for (e = list_begin (&file_list); e != list_end (&file_list);
+  for (e = list_begin (&thread_current ()->file_list); e != list_end (&thread_current ()->file_list);
       e = list_next (e))
   {
     struct file_fd *ff = list_entry (e, struct file_fd, file_elem);
@@ -342,14 +346,12 @@ static unsigned tell (int fd)
 
 static void close (int fd) 
 {
-  // Not implement.
-  if (fd == 0 || fd == 1)
+  if (fd == 0 || fd == 1 || fd > thread_current ()->fd)
     return ;
-  struct list file_list = thread_current ()->file_list;
   struct list_elem *e;
   struct file *f = NULL;
   struct file_fd *ff;
-  for (e = list_begin (&file_list); e != list_end (&file_list);
+  for (e = list_begin (&thread_current ()->file_list); e != list_end (&thread_current ()->file_list);
       e = list_next (e))
   {
     ff = list_entry (e, struct file_fd, file_elem);
