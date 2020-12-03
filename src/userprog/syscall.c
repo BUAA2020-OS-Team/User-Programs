@@ -52,7 +52,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   /* 这里的判断应该是有问题的 */
   if (is_user_vaddr (f->esp) && f->esp > (void*)0x08048000)
   {
-    struct thread* t = thread_current ();
+    // struct thread* t = thread_current ();
     /*
     if (pagedir_get_page (thread_current()->pagedir, f->esp) == NULL)
     {
