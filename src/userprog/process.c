@@ -40,7 +40,9 @@ process_execute (const char *file_name)
 
   /* Get exec_name from file_name. */
   char *save_ptr;
-  char *exec_name = strtok_r(file_name, " ", &save_ptr);
+  char *fn = palloc_get_page (0);
+  strlcpy (fn, file_name, PGSIZE);
+  char *exec_name = strtok_r(fn, " ", &save_ptr);
 
   /* Get argc and argv from rest of the file_name. */
   /*char *arg;
@@ -54,6 +56,7 @@ process_execute (const char *file_name)
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (exec_name, PRI_DEFAULT, start_process, fn_copy);
+  sema_down(&thread_current()->wait_exec);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
