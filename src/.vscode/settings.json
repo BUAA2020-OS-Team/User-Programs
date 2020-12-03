@@ -2,6 +2,7 @@
     "files.associations": {
         "ostream": "c",
         "algorithm": "c",
-        "*.inc": "c"
+        "*.inc": "c",
+        "__mutex_base": "c"
     }
 }

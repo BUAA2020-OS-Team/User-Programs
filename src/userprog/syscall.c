@@ -201,6 +201,10 @@ static void exit (int status)
 
 static pid_t exec (char *cmd_line) 
 {
+  if (cmd_line == NULL)
+    exit (-1);
+  if (isBad (cmd_line))
+    exit (-1);
   return process_execute (cmd_line);
 }
 
