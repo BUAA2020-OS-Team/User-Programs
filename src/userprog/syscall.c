@@ -295,11 +295,7 @@ static int read (int fd, void *buffer, unsigned size)
     }
     if (f == NULL)
       return -1;
-    off_t siz = file_read (f, buffer, size);
-    char *buf = (char*)buffer;
-    if (buf[siz-1] == -1)
-      siz--;
-    return siz;
+    return file_read (f, buffer, size);
   }
 }
 
