@@ -481,6 +481,7 @@ init_thread (struct thread *t, const char *name, int priority)
 
 #ifdef USERPROG
   sema_init(&t->some_semaphore, 0);
+  sema_init(&t->wait_exec, 0);
   if (t != init_thread)
     t->parent = running_thread ();
   t->fd = 1;

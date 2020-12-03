@@ -99,9 +99,10 @@ struct thread
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
     struct semaphore some_semaphore;    /* 用于实现简单的process_wait */
+    struct semaphore wait_exec;         /* 用于等待子进程执行完毕exec */
     struct thread *parent;              /* The parent thread. */
     int fd;                             /* 该线程的文件描述符 */
-    struct list file_list;             /* 当前线程打开文件的列表 */
+    struct list file_list;              /* 当前线程打开文件的列表 */
 #endif
 
     /* Owned by thread.c. */
