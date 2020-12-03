@@ -205,7 +205,9 @@ static pid_t exec (char *cmd_line)
     exit (-1);
   if (isBad (cmd_line))
     exit (-1);
-  return process_execute (cmd_line);
+  pid_t pid = process_execute (cmd_line);
+  sema_down(&thread_current()->some_semaphore);
+  return pid;
 }
 
 static bool create (char *file, int initial_size) 
