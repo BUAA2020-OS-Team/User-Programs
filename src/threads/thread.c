@@ -480,7 +480,6 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
 
 #ifdef USERPROG
-  t->pagedir = pagedir_create ();
   sema_init(&t->some_semaphore, 0);
   if (t != init_thread)
     t->parent = running_thread ();
