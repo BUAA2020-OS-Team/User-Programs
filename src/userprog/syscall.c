@@ -42,6 +42,25 @@ syscall_init (void)
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
 
+static bool isBad (const void *p)
+{
+  if (is_user_vaddr (p) && p > (void*)0x08048000)
+  {
+    if (pagedir_get_page (thread_current()->pagedir, p) == NULL)
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+  else
+  {
+    return true;
+  }
+}
+
 static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
@@ -50,7 +69,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   // first check if f->esp is a valid pointer)
 
   /* 这里的判断应该是有问题的 */
-  if (is_user_vaddr (f->esp) && f->esp > (void*)0x08048000)
+  if (f->esp <= (void*)0xbffffffc && f->esp > (void*)0x08048000)
   {
     if (pagedir_get_page (thread_current()->pagedir, f->esp) == NULL)
     {
@@ -74,13 +93,17 @@ syscall_handler (struct intr_frame *f UNUSED)
     case SYS_EXIT:
     {
       // Implement syscall EXIT
+      if (!is_user_vaddr ((int*)f->esp + 1))
+      {
+        exit (-1);
+      }
       int status = *((int*)f->esp + 1);
       exit (status);
       break;
     }
     case SYS_EXEC:
     {
-      // Implement syscall EXIT
+      // Implement syscall EXEC
       char *cmd_line = (char *)(*((int*)f->esp + 1));
       f->eax = exec (cmd_line);
       break;
@@ -184,7 +207,9 @@ static pid_t exec (char *cmd_line)
 static bool create (char *file, int initial_size) 
 {
   if (file == NULL)
-    exit(-1);
+    exit (-1);
+  if (isBad (file))
+    exit (-1);
   return filesys_create(file, initial_size);
 }
 
@@ -197,6 +222,8 @@ static int open (char *file)
 {
   if (file == NULL)
     return -1;
+  if (isBad (file))
+    exit (-1);
   struct file *f = filesys_open (file);
   if (f == NULL) 
   {
@@ -236,6 +263,8 @@ static int read (int fd, void *buffer, unsigned size)
   
   if (fd == 1 || fd > thread_current ()->fd)
     return -1;
+  if (isBad (buffer))
+    exit (-1);
   int i = 0;
   if (fd == 0)
   {
@@ -279,6 +308,8 @@ static int write (int fd, void* buffer, unsigned size)
   }
   if (fd == 0 || fd > thread_current ()->fd)
     return -1;
+  if (isBad (buffer))
+    exit (-1);
   else
   {
     struct list_elem *e;
