@@ -30,15 +30,19 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
 tid_t
 process_execute (const char *file_name) 
 {
+  printf("process executing...\n");
   char *fn_copy;
   tid_t tid;
 
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
+  printf("process executing1...\n");
   fn_copy = palloc_get_page (0);
   if (fn_copy == NULL)
     return TID_ERROR;
+  printf("process executing2...\n");
   strlcpy (fn_copy, file_name, PGSIZE);
+  printf("process executing3...\n");
   struct PCB *pcb = (struct PCB *) palloc_get_page (0);
   pcb->file_name = fn_copy;
   pcb->error_code = 0;
@@ -150,8 +154,10 @@ start_process (void *pcb)
   /* If load failed, quit. */
   palloc_free_page (file_name);
   sema_up(&thread_current()->parent->wait_exec);
-  if (!success) 
+  if (!success) {
+    ((struct PCB *)pcb)->error_code = -1;
     exit(-1);
+  }
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
