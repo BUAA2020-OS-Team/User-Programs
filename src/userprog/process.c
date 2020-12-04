@@ -115,15 +115,14 @@ start_process (void *file_name_)
     memset(*esp, 0, align);
     for (int i = 0; i < argc; i++) {
       *esp -= 4;
-      memcpy(*esp, &addr[i], 4);
+      *(void**)*esp = addr[i];
     }
-    void *old_esp = *esp;
     *esp -= 4;
-    memcpy(*esp, &old_esp, 4);
+    *(void**)*esp = *esp + 4;
     *esp -= 4;
-    memcpy(*esp, &argc, 4);
+    *(int*)*esp = argc;
     *esp -= 4;
-    memset(*esp, 0, 4);
+    *(int*)*esp = 0;
 
     palloc_free_page (stack);
     palloc_free_page (addr);
