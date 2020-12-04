@@ -77,7 +77,54 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
-
+  if (success)
+  {
+    void **esp = &if_.esp;
+    char *save_ptr = file_name, *subtoken;
+    char **stack = (char**) palloc_get_page(0);
+    void **addr = (void**) palloc_get_page(0);
+    int top = -1;
+    int sum_len = 0, argc = 0;
+    size_t len;
+    stack[++top] = save_ptr;
+    for (; *save_ptr != 0; save_ptr++) {}
+    save_ptr++;
+    while (1)
+    {
+      subtoken = strtok_r (NULL, " ", &save_ptr);
+      if (subtoken == NULL)
+      {
+        break;
+      }
+      stack[++top] = subtoken;
+    }
+    while (top != -1)
+    {
+      char *arg = stack[top--];
+      len = strlen(arg)+1;
+      *esp -= len;
+      sum_len += len;
+      addr[argc++] = *esp;
+      memcpy(*esp, arg, len);
+    }
+    int align = 4 - (sum_len % 4);
+    if (align < 4)
+      align += 4;
+    *esp -= align;
+    memset(*esp, 0, align);
+    for (int i = 0; i < argc; i++) {
+      *esp -= 4;
+      memcpy(*esp, &addr[i], 4);
+    }
+    void *old_esp = *esp;
+    *esp -= 4;
+    memcpy(*esp, &old_esp, 4);
+    *esp -= 4;
+    memcpy(*esp, &argc, 4);
+    *esp -= 4;
+    memset(*esp, 0, 4);
+  }
+  
   /* If load failed, quit. */
   palloc_free_page (file_name);
   sema_up(&thread_current()->parent->wait_exec);
@@ -472,49 +519,6 @@ setup_stack (void **esp, char *file_name)
         // /* 初始化栈 */
         // #ifndef SIMPLE_IMPL
         *esp = PHYS_BASE;
-        char *save_ptr = file_name, *subtoken;
-        char* stack[30];
-        int top = -1;
-        int sum_len = 0, argc = 0;
-        void* addr[30];
-        size_t len;
-        stack[++top] = save_ptr;
-        for (; *save_ptr != 0; save_ptr++) {}
-        save_ptr++;
-        while (1)
-        {
-          subtoken = strtok_r (NULL, " ", &save_ptr);
-          if (subtoken == NULL)
-          {
-            break;
-          }
-          stack[++top] = subtoken;
-        }
-        while (top != -1)
-        {
-          char *arg = stack[top--];
-          len = strlen(arg)+1;
-          *esp -= len;
-          sum_len += len;
-          addr[argc++] = *esp;
-          memcpy(*esp, arg, len);
-        }
-        int align = 4 - (sum_len % 4);
-        if (align < 4)
-          align += 4;
-        *esp -= align;
-        memset(*esp, 0, align);
-        for (int i = 0; i < argc; i++) {
-          *esp -= 4;
-          memcpy(*esp, &addr[i], 4);
-        }
-        void *old_esp = *esp;
-        *esp -= 4;
-        memcpy(*esp, &old_esp, 4);
-        *esp -= 4;
-        memcpy(*esp, &argc, 4);
-        *esp -= 4;
-        memset(*esp, 0, 4);
         //#endif
         // 查看内存
         /*
