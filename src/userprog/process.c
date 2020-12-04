@@ -88,7 +88,7 @@ start_process (void *file_name_)
     size_t len;
     printf("init no problem...\n");
     stack[++top] = save_ptr;
-    for (; *save_ptr != 0; save_ptr++) {}
+    for (; *save_ptr != 0; save_ptr++) {printf("%c", *save_ptr);}
     save_ptr++;
     printf("parse1 no problem...\n");
     while (1)
