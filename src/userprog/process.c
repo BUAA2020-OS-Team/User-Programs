@@ -60,6 +60,7 @@ process_execute (const char *file_name)
   if (fn == NULL)
     return TID_ERROR;
   strlcpy (fn, file_name, PGSIZE);
+  char *exec_name = strtok_r (fn, " ", &save_ptr);
   // printf ("already parse file name...\n");
 
   /* Get argc and argv from rest of the file_name. */
@@ -73,7 +74,7 @@ process_execute (const char *file_name)
     */
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (fn, PRI_DEFAULT, start_process, pcb);
+  tid = thread_create (exec_name, PRI_DEFAULT, start_process, pcb);
   sema_down(&thread_current()->wait_exec);
   if (pcb->error_code == -1)
     tid = TID_ERROR;
