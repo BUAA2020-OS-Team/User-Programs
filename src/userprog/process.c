@@ -123,6 +123,9 @@ start_process (void *file_name_)
     memcpy(*esp, &argc, 4);
     *esp -= 4;
     memset(*esp, 0, 4);
+
+    palloc_free_page (stack);
+    palloc_free_page (addr);
   }
   
   /* If load failed, quit. */
