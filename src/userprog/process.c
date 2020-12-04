@@ -79,8 +79,7 @@ process_execute (const char *file_name)
   if (thread_current ()->child_status == -1)
     tid = TID_ERROR;
   if (tid == TID_ERROR)
-    palloc_free_page (pcb->file_name); 
-    palloc_free_page (pcb); 
+    palloc_free_page (fn_copy);
   return tid;
 }
 
