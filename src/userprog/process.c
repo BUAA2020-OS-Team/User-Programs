@@ -39,7 +39,10 @@ process_execute (const char *file_name)
   if (fn_copy == NULL)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
-  printf ("already copy file name...\n");
+  struct PCB *pcb = (struct PCB *) palloc_get_page (0);
+  pcb->file_name = fn_copy;
+  pcb->error_code = 0;
+  printf ("already set pcb...\n");
 
   /* Get exec_name from file_name. */
   char *save_ptr;
@@ -58,21 +61,25 @@ process_execute (const char *file_name)
     */
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (fn, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (fn, PRI_DEFAULT, start_process, pcb);
   sema_down(&thread_current()->wait_exec);
+  if (pcb->error_code == -1)
+    tid = TID_ERROR;
   if (tid == TID_ERROR)
-    palloc_free_page (fn_copy); 
+    palloc_free_page (pcb->file_name); 
+    palloc_free_page (pcb); 
   return tid;
 }
 
 /* A thread function that loads a user process and starts it
    running. */
 static void
-start_process (void *file_name_)
+start_process (void *pcb)
 {
-  char *file_name = file_name_;
+  char *file_name = ((struct PCB *)pcb)->file_name;
   struct intr_frame if_;
   bool success;
+  printf ("start process...\n");
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -302,12 +309,15 @@ load (const char *file_name, void (**eip) (void), void **esp)
   off_t file_ofs;
   bool success = false;
   int i;
+  printf ("loading...\n");
 
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
+  printf("[load] pagedir created..\n");
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
+  printf("[load] process activated..\n");
 
   /* Get exec_name from file_name. */
   char *save_ptr;
