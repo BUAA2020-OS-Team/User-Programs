@@ -205,6 +205,8 @@ static pid_t exec (char *cmd_line)
     exit (-1);
   if (isBad (cmd_line))
     exit (-1);
+  if (filesys_open (cmd_line) == NULL)
+    exit (-1);
   pid_t pid = process_execute (cmd_line);
   return pid;
 }
