@@ -29,7 +29,6 @@ static bool create (char *file, int initial_size);
 static bool remove (char *file);
 static int open (char *file);
 static int filesize (int fd);
-void exit(int status);
 static int read (int fd, void* buffer, unsigned size);
 static int write(int fd, void* buffer, unsigned size);
 static unsigned tell (int fd);
@@ -69,10 +68,6 @@ syscall_handler (struct intr_frame *f UNUSED)
   // first check if f->esp is a valid pointer)
 
   printf ("%%esp: %p, [%%esp]: %d", f->esp, *(int*)f->esp);
-  if (isBad (f))
-  {
-    exit (-1);
-  }
   
   /* 这里的判断应该是有问题的 */
   if (f->esp <= (void*)0xbffffffc && f->esp > (void*)0x08048000)
