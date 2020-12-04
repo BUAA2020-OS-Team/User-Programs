@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "userprog/gdt.h"
 #include "userprog/pagedir.h"
 #include "userprog/tss.h"
@@ -88,7 +89,7 @@ start_process (void *file_name_)
     size_t len;
     printf("init no problem...\n");
     stack[++top] = save_ptr;
-    for (; *save_ptr != 0; save_ptr++) {printf("%c", *save_ptr);}
+    for (; *save_ptr != 0; save_ptr++) {}
     save_ptr++;
     printf("parse1 no problem...\n");
     while (1)
@@ -98,6 +99,8 @@ start_process (void *file_name_)
       {
         break;
       }
+      while(!isprint(*subtoken))
+        subtoken++;
       stack[++top] = subtoken;
     }
     printf("parse2 no problem...\n");
