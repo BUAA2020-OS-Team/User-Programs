@@ -9,6 +9,7 @@
 #include "userprog/gdt.h"
 #include "userprog/pagedir.h"
 #include "userprog/tss.h"
+#include "userprog/syscall.h"
 #include "filesys/directory.h"
 #include "filesys/file.h"
 #include "filesys/filesys.h"
@@ -38,12 +39,13 @@ process_execute (const char *file_name)
   if (fn_copy == NULL)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
+  printf ("already copy file name...\n");
 
   /* Get exec_name from file_name. */
   char *save_ptr;
   char *fn = palloc_get_page (0);
   strlcpy (fn, file_name, PGSIZE);
-  char *exec_name = strtok_r(fn, " ", &save_ptr);
+  printf ("already parse file name...\n");
 
   /* Get argc and argv from rest of the file_name. */
   /*char *arg;
@@ -56,7 +58,7 @@ process_execute (const char *file_name)
     */
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (exec_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (fn, PRI_DEFAULT, start_process, fn_copy);
   sema_down(&thread_current()->wait_exec);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
@@ -142,7 +144,7 @@ start_process (void *file_name_)
   palloc_free_page (file_name);
   sema_up(&thread_current()->parent->wait_exec);
   if (!success) 
-    thread_exit ();
+    exit(-1);
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
@@ -281,7 +283,7 @@ struct Elf32_Phdr
 #define PF_W 2          /* Writable. */
 #define PF_R 4          /* Readable. */
 
-static bool setup_stack (void **esp, char *file_name);
+static bool setup_stack (void **esp);
 static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
@@ -318,6 +320,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
       printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
+  printf("[load] opened file..\n");
 
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
@@ -331,6 +334,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
       printf ("load: %s: error loading executable\n", file_name);
       goto done; 
     }
+  printf("[load] read file..\n");
 
   /* Read program headers. */
   file_ofs = ehdr.e_phoff;
@@ -390,10 +394,12 @@ load (const char *file_name, void (**eip) (void), void **esp)
           break;
         }
     }
+  printf("[load] program headers..\n");
 
   /* Set up stack. */
-  if (!setup_stack (esp, file_name))
+  if (!setup_stack (esp))
     goto done;
+  printf("[load] setup stack..\n");
 
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
@@ -517,7 +523,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 /* Create a minimal stack by mapping a zeroed page at the top of
    user virtual memory. */
 static bool
-setup_stack (void **esp, char *file_name) 
+setup_stack (void **esp) 
 {
   uint8_t *kpage;
   bool success = false;
@@ -528,17 +534,7 @@ setup_stack (void **esp, char *file_name)
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
       if (success)
       {
-        // #define SIMPLE_IMPL
-        // *esp = PHYS_BASE - 12;
-        // /* 初始化栈 */
-        // #ifndef SIMPLE_IMPL
         *esp = PHYS_BASE;
-        //#endif
-        // 查看内存
-        /*
-        for (int *p = *esp; p < PHYS_BASE; p++) {
-          printf ("Address: %p, value: %x\n", p, *p);
-        }*/
       }
       else
         palloc_free_page (kpage);

@@ -29,7 +29,7 @@ static bool create (char *file, int initial_size);
 static bool remove (char *file);
 static int open (char *file);
 static int filesize (int fd);
-static void exit(int status);
+void exit(int status);
 static int read (int fd, void* buffer, unsigned size);
 static int write(int fd, void* buffer, unsigned size);
 static unsigned tell (int fd);
@@ -192,7 +192,7 @@ static void halt (void)
   shutdown_power_off ();
 }
 
-static void exit (int status) 
+void exit (int status) 
 {
   printf ("%s: exit(%d)\n", thread_current()->name, status);
   sema_up(&thread_current()->parent->some_semaphore);
@@ -204,8 +204,6 @@ static pid_t exec (char *cmd_line)
   if (cmd_line == NULL)
     exit (-1);
   if (isBad (cmd_line))
-    exit (-1);
-  if (filesys_open (cmd_line) == NULL)
     exit (-1);
   pid_t pid = process_execute (cmd_line);
   return pid;
