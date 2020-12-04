@@ -77,19 +77,20 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
-  printf("already load success..."); // 这是韩子尧自己加的，需删去
+  printf("already load success...\n"); // 这是韩子尧自己加的，需删去
   if (success)
   {
     void **esp = &if_.esp;
     char *save_ptr = file_name, *subtoken;
     char **stack = (char**) palloc_get_page(0);
-    void **addr = (void**) palloc_get_page(0);
     int top = -1;
     int sum_len = 0, argc = 0;
     size_t len;
+    printf("init no problem...\n");
     stack[++top] = save_ptr;
     for (; *save_ptr != 0; save_ptr++) {}
     save_ptr++;
+    printf("parse1 no problem...\n");
     while (1)
     {
       subtoken = strtok_r (NULL, " ", &save_ptr);
@@ -99,6 +100,8 @@ start_process (void *file_name_)
       }
       stack[++top] = subtoken;
     }
+    printf("parse2 no problem...\n");
+    void* addr[top+1];
     while (top != -1)
     {
       char *arg = stack[top--];
@@ -108,6 +111,7 @@ start_process (void *file_name_)
       addr[argc++] = *esp;
       memcpy(*esp, arg, len);
     }
+    printf("set1 no problem...\n");
     int align = 4 - (sum_len % 4);
     if (align < 4)
       align += 4;
@@ -117,15 +121,16 @@ start_process (void *file_name_)
       *esp -= 4;
       *(void**)*esp = addr[i];
     }
+    printf("set2 no problem...\n");
     *esp -= 4;
     *(void**)*esp = *esp + 4;
     *esp -= 4;
     *(int*)*esp = argc;
     *esp -= 4;
     *(int*)*esp = 0;
+    printf("set3 no problem...\n");
 
     palloc_free_page (stack);
-    palloc_free_page (addr);
   }
   printf("already set stack..."); // 这是韩子尧自己加的，需删去
   /* If load failed, quit. */
