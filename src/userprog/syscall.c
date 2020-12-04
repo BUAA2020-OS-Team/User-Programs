@@ -184,6 +184,8 @@ syscall_handler (struct intr_frame *f UNUSED)
       close(fd);
       break;
     }
+    default:
+      exit (-1);
   }
 }
 
