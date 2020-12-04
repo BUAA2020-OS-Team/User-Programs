@@ -324,7 +324,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   off_t file_ofs;
   bool success = false;
   int i;
-  printf ("loading...\n");
+  // printf ("loading...\n");
 
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
