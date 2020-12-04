@@ -31,6 +31,9 @@ tid_t
 process_execute (const char *file_name) 
 {
   printf("process executing...\n");
+  if (file_name == NULL)
+    return TID_ERROR;
+  
   char *fn_copy;
   tid_t tid;
 
@@ -44,13 +47,18 @@ process_execute (const char *file_name)
   strlcpy (fn_copy, file_name, PGSIZE);
   printf("process executing3...\n");
   struct PCB *pcb = (struct PCB *) palloc_get_page (0);
+  if (pcb == NULL)
+    return TID_ERROR;
+
   pcb->file_name = fn_copy;
   pcb->error_code = 0;
   printf ("already set pcb...\n");
 
   /* Get exec_name from file_name. */
-  char *save_ptr;
+  char *save_ptr = NULL;
   char *fn = palloc_get_page (0);
+  if (fn == NULL)
+    return TID_ERROR;
   strlcpy (fn, file_name, PGSIZE);
   printf ("already parse file name...\n");
 
@@ -153,9 +161,9 @@ start_process (void *pcb)
   printf("already set stack..."); // 这是韩子尧自己加的，需删去
   /* If load failed, quit. */
   palloc_free_page (file_name);
-  sema_up(&thread_current()->parent->wait_exec);
   if (!success) {
     ((struct PCB *)pcb)->error_code = -1;
+    sema_up(&thread_current()->parent->wait_exec);
     exit(-1);
   }
 
@@ -166,6 +174,7 @@ start_process (void *pcb)
      we just point the stack pointer (%esp) to our stack frame
      and jump to it. */
   printf("up to running..."); // 这是韩子尧自己加的，需删去
+  sema_up(&thread_current()->parent->wait_exec);
   asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
   NOT_REACHED ();
 }
