@@ -30,7 +30,7 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
 tid_t
 process_execute (const char *file_name) 
 {
-  printf("process executing...\n");
+  // printf("process executing...\n");
   if (file_name == NULL)
     return TID_ERROR;
   
@@ -39,20 +39,20 @@ process_execute (const char *file_name)
 
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
-  printf("process executing1...\n");
+  // printf("process executing1...\n");
   fn_copy = palloc_get_page (0);
   if (fn_copy == NULL)
     return TID_ERROR;
-  printf("process executing2...\n");
+  // printf("process executing2...\n");
   strlcpy (fn_copy, file_name, PGSIZE);
-  printf("process executing3...\n");
+  // printf("process executing3...\n");
   struct PCB *pcb = (struct PCB *) palloc_get_page (0);
   if (pcb == NULL)
     return TID_ERROR;
 
   pcb->file_name = fn_copy;
   pcb->error_code = 0;
-  printf ("already set pcb...\n");
+  // printf ("already set pcb...\n");
 
   /* Get exec_name from file_name. */
   char *save_ptr = NULL;
@@ -60,7 +60,7 @@ process_execute (const char *file_name)
   if (fn == NULL)
     return TID_ERROR;
   strlcpy (fn, file_name, PGSIZE);
-  printf ("already parse file name...\n");
+  // printf ("already parse file name...\n");
 
   /* Get argc and argv from rest of the file_name. */
   /*char *arg;
@@ -91,7 +91,7 @@ start_process (void *pcb)
   char *file_name = ((struct PCB *)pcb)->file_name;
   struct intr_frame if_;
   bool success;
-  printf ("start process...\n");
+  // printf ("start process...\n");
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -99,7 +99,7 @@ start_process (void *pcb)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
-  printf("already load success...\n"); // 这是韩子尧自己加的，需删去
+  // printf("already load success...\n");
   if (success)
   {
     void **esp = &if_.esp;
@@ -108,11 +108,11 @@ start_process (void *pcb)
     int top = -1;
     int sum_len = 0, argc = 0;
     size_t len;
-    printf("init no problem...\n");
+    // printf("init no problem...\n");
     stack[++top] = save_ptr;
     for (; *save_ptr != 0; save_ptr++) {}
     save_ptr++;
-    printf("parse1 no problem...\n");
+    // printf("parse1 no problem...\n");
     while (1)
     {
       subtoken = strtok_r (NULL, " ", &save_ptr);
@@ -124,20 +124,20 @@ start_process (void *pcb)
         subtoken++;
       stack[++top] = subtoken;
     }
-    printf("parse2 no problem...\n");
+    // printf("parse2 no problem...\n");
     void* addr[top+1];
     while (top != -1)
     {
       char *arg = stack[top--];
-      printf("%s\n", arg);
+      // printf("%s\n", arg);
       len = strlen(arg)+1;
       *esp -= len;
       sum_len += len;
       addr[argc++] = *esp;
-      printf("up to memory copy...\n");
+      // printf("up to memory copy...\n");
       memcpy(*esp, arg, len);
     }
-    printf("set1 no problem...\n");
+    // printf("set1 no problem...\n");
     int align = 4 - (sum_len % 4);
     if (align < 4)
       align += 4;
@@ -147,18 +147,18 @@ start_process (void *pcb)
       *esp -= 4;
       *(void**)*esp = addr[i];
     }
-    printf("set2 no problem...\n");
+    // printf("set2 no problem...\n");
     *esp -= 4;
     *(void**)*esp = *esp + 4;
     *esp -= 4;
     *(int*)*esp = argc;
     *esp -= 4;
     *(int*)*esp = 0;
-    printf("set3 no problem...\n");
+    // printf("set3 no problem...\n");
 
     palloc_free_page (stack);
   }
-  printf("already set stack..."); // 这是韩子尧自己加的，需删去
+  // printf("already set stack...");
   /* If load failed, quit. */
   palloc_free_page (file_name);
   if (!success) {
@@ -173,7 +173,7 @@ start_process (void *pcb)
      arguments on the stack in the form of a `struct intr_frame',
      we just point the stack pointer (%esp) to our stack frame
      and jump to it. */
-  printf("up to running..."); // 这是韩子尧自己加的，需删去
+  // printf("up to running...");
   sema_up(&thread_current()->parent->wait_exec);
   asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
   NOT_REACHED ();
@@ -328,11 +328,11 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
-  printf("[load] pagedir created..\n");
+  // printf("[load] pagedir created..\n");
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
-  printf("[load] process activated..\n");
+  // printf("[load] process activated..\n");
 
   /* Get exec_name from file_name. */
   char *save_ptr;
@@ -345,7 +345,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
       printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
-  printf("[load] opened file..\n");
+  // printf("[load] opened file..\n");
 
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
@@ -359,7 +359,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
       printf ("load: %s: error loading executable\n", file_name);
       goto done; 
     }
-  printf("[load] read file..\n");
+  // printf("[load] read file..\n");
 
   /* Read program headers. */
   file_ofs = ehdr.e_phoff;
@@ -419,12 +419,12 @@ load (const char *file_name, void (**eip) (void), void **esp)
           break;
         }
     }
-  printf("[load] program headers..\n");
+  // printf("[load] program headers..\n");
 
   /* Set up stack. */
   if (!setup_stack (esp))
     goto done;
-  printf("[load] setup stack..\n");
+  // printf("[load] setup stack..\n");
 
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
