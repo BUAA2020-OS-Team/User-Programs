@@ -64,10 +64,11 @@ static bool isBad (const void *p)
 static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
-  // printf ("system call!\n");
+  printf ("system call!\n");
   // thread_exit ();
   // first check if f->esp is a valid pointer)
 
+  printf ("%%esp: %p, [%%esp]: %d", f->esp, *(int*)f->esp);
   /* 这里的判断应该是有问题的 */
   if (f->esp <= (void*)0xbffffffc && f->esp > (void*)0x08048000)
   {
@@ -81,6 +82,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     exit (-1);
   }
   
+  printf ("%%esp: %p, [%%esp]: %d", f->esp, *(int*)f->esp);
   // cast f->esp into an int*, then dereference it for the SYS_CODE
   switch(*(int*)f->esp)
   {
