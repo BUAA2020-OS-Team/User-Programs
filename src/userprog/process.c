@@ -105,10 +105,12 @@ start_process (void *file_name_)
     while (top != -1)
     {
       char *arg = stack[top--];
+      printf("%s\n", arg);
       len = strlen(arg)+1;
       *esp -= len;
       sum_len += len;
       addr[argc++] = *esp;
+      printf("up to memory copy...\n");
       memcpy(*esp, arg, len);
     }
     printf("set1 no problem...\n");
