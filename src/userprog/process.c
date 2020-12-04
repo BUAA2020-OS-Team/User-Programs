@@ -77,6 +77,7 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
+  printf("already load success..."); // 这是韩子尧自己加的，需删去
   if (success)
   {
     void **esp = &if_.esp;
@@ -127,7 +128,7 @@ start_process (void *file_name_)
     palloc_free_page (stack);
     palloc_free_page (addr);
   }
-  
+  printf("already set stack..."); // 这是韩子尧自己加的，需删去
   /* If load failed, quit. */
   palloc_free_page (file_name);
   sema_up(&thread_current()->parent->wait_exec);
@@ -140,6 +141,7 @@ start_process (void *file_name_)
      arguments on the stack in the form of a `struct intr_frame',
      we just point the stack pointer (%esp) to our stack frame
      and jump to it. */
+  printf("up to running..."); // 这是韩子尧自己加的，需删去
   asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
   NOT_REACHED ();
 }
