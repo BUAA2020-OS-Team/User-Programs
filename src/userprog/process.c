@@ -46,12 +46,12 @@ process_execute (const char *file_name)
   // printf("process executing2...\n");
   strlcpy (fn_copy, file_name, PGSIZE);
   // printf("process executing3...\n");
-  struct PCB *pcb = (struct PCB *) palloc_get_page (0);
+  /* struct PCB *pcb = (struct PCB *) palloc_get_page (0);
   if (pcb == NULL)
     return TID_ERROR;
 
   pcb->file_name = fn_copy;
-  pcb->error_code = 0;
+  pcb->error_code = 0; */
   // printf ("already set pcb...\n");
 
   /* Get exec_name from file_name. */
@@ -74,9 +74,9 @@ process_execute (const char *file_name)
     */
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (exec_name, PRI_DEFAULT, start_process, pcb);
+  tid = thread_create (exec_name, PRI_DEFAULT, start_process, fn_copy);
   sema_down(&thread_current()->wait_exec);
-  if (pcb->error_code == -1)
+  if (thread_current ()->child_status == -1)
     tid = TID_ERROR;
   if (tid == TID_ERROR)
     palloc_free_page (pcb->file_name); 
@@ -87,9 +87,9 @@ process_execute (const char *file_name)
 /* A thread function that loads a user process and starts it
    running. */
 static void
-start_process (void *pcb)
+start_process (void *_file_name)
 {
-  char *file_name = ((struct PCB *)pcb)->file_name;
+  char *file_name = (char*)_file_name;
   struct intr_frame if_;
   bool success;
   // printf ("start process...\n");
@@ -163,9 +163,9 @@ start_process (void *pcb)
   /* If load failed, quit. */
   palloc_free_page (file_name);
   if (!success) {
-    ((struct PCB *)pcb)->error_code = -1;
-    sema_up(&thread_current()->parent->wait_exec);
-    exit(-1);
+    thread_current ()->parent->child_status = -1;
+    sema_up (&thread_current ()->parent->wait_exec);
+    exit (-1);
   }
 
   /* Start the user process by simulating a return from an
@@ -175,7 +175,7 @@ start_process (void *pcb)
      we just point the stack pointer (%esp) to our stack frame
      and jump to it. */
   // printf("up to running...");
-  sema_up(&thread_current()->parent->wait_exec);
+  sema_up (&thread_current ()->parent->wait_exec);
   asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
   NOT_REACHED ();
 }

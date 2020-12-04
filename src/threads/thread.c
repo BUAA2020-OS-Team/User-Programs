@@ -485,6 +485,7 @@ init_thread (struct thread *t, const char *name, int priority)
   if (t != init_thread)
     t->parent = running_thread ();
   t->fd = 1;
+  t->child_status = 0;
   list_init (&t->file_list);
 #endif
 

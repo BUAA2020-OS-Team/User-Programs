@@ -103,6 +103,7 @@ struct thread
     struct thread *parent;              /* The parent thread. */
     int fd;                             /* 该线程的文件描述符 */
     struct list file_list;              /* 当前线程打开文件的列表 */
+    int child_status;                   /* exec()子进程的运行状态 */
 #endif
 
     /* Owned by thread.c. */
