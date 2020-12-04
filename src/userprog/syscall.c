@@ -44,7 +44,7 @@ syscall_init (void)
 
 static bool isBad (const void *p)
 {
-  if (is_user_vaddr (p) && p > (void*)0x08048000)
+  if (p <= (void*)0xbffffffc && p > (void*)0x08048000)
   {
     if (pagedir_get_page (thread_current()->pagedir, p) == NULL)
     {
@@ -69,6 +69,11 @@ syscall_handler (struct intr_frame *f UNUSED)
   // first check if f->esp is a valid pointer)
 
   printf ("%%esp: %p, [%%esp]: %d", f->esp, *(int*)f->esp);
+  if (isBad (f))
+  {
+    exit (-1);
+  }
+  
   /* 这里的判断应该是有问题的 */
   if (f->esp <= (void*)0xbffffffc && f->esp > (void*)0x08048000)
   {
