@@ -157,10 +157,11 @@ start_process (void *_file_name)
     // printf("set3 no problem...\n");
 
     palloc_free_page (stack);
+    palloc_free_page (file_name);
   }
   // printf("already set stack...");
   /* If load failed, quit. */
-  palloc_free_page (file_name);
+  //palloc_free_page (file_name);
   if (!success) {
     thread_current ()->parent->child_status = -1;
     sema_up (&thread_current ()->parent->wait_exec);
@@ -337,11 +338,13 @@ load (const char *file_name, void (**eip) (void), void **esp)
   /* Get exec_name from file_name. */
   char *save_ptr;
   char *exec_name = strtok_r(file_name, " ", &save_ptr);
+  bool exist = true;
 
   /* Open executable file. */
   file = filesys_open (exec_name);
   if (file == NULL) 
     {
+      exist = false;
       printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
@@ -435,7 +438,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
   /* We arrive here whether the load is successful or not. */
-  file_close (file);
+  if (exist)
+    file_close (file);
   return success;
 }
 
