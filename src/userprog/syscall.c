@@ -41,6 +41,7 @@ void
 syscall_init (void) 
 {
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
+  lock_init (&rox_lock);
 }
 
 static bool isBad (const void *p)
@@ -211,7 +212,16 @@ static pid_t exec (char *cmd_line)
     exit (-1);
   if (isBad (cmd_line))
     exit (-1);
+
+  // struct file *f = filesys_open (cmd_line);
+  // if (f == NULL)
+  //   return -1;
+  // else
+  //   file_close (f);
+
+  lock_acquire (&rox_lock);
   pid_t pid = process_execute (cmd_line);
+  lock_release (&rox_lock);
   return pid;
 }
 
@@ -235,7 +245,9 @@ static int open (char *file)
     return -1;
   if (isBad (file))
     exit (-1);
+  lock_acquire (&rox_lock);
   struct file *f = filesys_open (file);
+  lock_release (&rox_lock);
   if (f == NULL) 
   {
     return -1;
@@ -306,7 +318,11 @@ static int read (int fd, void *buffer, unsigned size)
     }
     if (f == NULL)
       return -1;
-    return file_read (f, buffer, size);
+    lock_acquire (&rox_lock);
+    int res = file_read (f, buffer, size);
+    file_deny_write (f);
+    lock_release (&rox_lock);
+    return res;
   }
 }
 
@@ -337,7 +353,11 @@ static int write (int fd, void* buffer, unsigned size)
     }
     if (f == NULL)
       return -1;
-    return file_write (f, buffer, size);
+    lock_acquire (&rox_lock);
+    int res =  file_write (f, buffer, size);
+    //printf ("%d", res);
+    lock_release (&rox_lock);
+    return res;
   }
   
 }
