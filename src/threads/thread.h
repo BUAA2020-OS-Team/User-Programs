@@ -94,7 +94,7 @@ struct thread
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
-
+#define USERPROG
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
@@ -116,7 +116,7 @@ struct thread
 #ifdef USERPROG
    struct cthread 
    {
-      struct thread *cthread;             /* 子进程tid */
+      struct thread *cthread;            /* 子进程tid */
       int exit_status;                   /* 退出状态, 等于100表示正在运行 */
       struct list_elem ctelem;           /* 当前线程的子线程列表元素 */
    };

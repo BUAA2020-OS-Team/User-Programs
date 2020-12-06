@@ -203,11 +203,13 @@ void exit (int status)
 {
   printf ("%s: exit(%d)\n", thread_current()->name, status);
 
-  for (e = list_begin (&thread_current()->parent->ct_list); e != list_end (&thread_current()->parent->ct_list);
+  struct list_elem *e;
+  struct thread *t = thread_current ();
+  for (e = list_begin (&t->parent->ct_list); e != list_end (&t->parent->ct_list);
       e = list_next (e))
     {
       struct cthread *ct = list_entry (e, struct cthread, ctelem);
-      if (ct->tid == child_tid) 
+      if (ct->cthread->tid == t->tid) 
         {
           ct->exit_status = status;
           break;

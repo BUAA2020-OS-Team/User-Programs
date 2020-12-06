@@ -192,11 +192,12 @@ start_process (void *_file_name)
 int
 process_wait (tid_t child_tid) 
 {
+  struct list_elem *e;
   for (e = list_begin (&thread_current()->ct_list); e != list_end (&thread_current()->ct_list);
       e = list_next (e))
     {
       struct cthread *ct = list_entry (e, struct cthread, ctelem);
-      if (ct->tid == child_tid)
+      if (ct->cthread->tid == child_tid)
         return ct->exit_status;
     }
 }
