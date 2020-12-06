@@ -486,7 +486,7 @@ init_thread (struct thread *t, const char *name, int priority)
   if (t != init_thread)
   {
     t->parent = running_thread ();
-    stuct cthread *ct;
+    struct cthread *ct;
     ct->cthread = t;
     ct->exit_status = 16;
     list_push_back (&t->parent->ct_list, &ct->ctelem);
@@ -494,7 +494,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->fd = 1;
   t->child_status = 0;
   list_init (&t->file_list);
-  list_init (&t->child_list);
+  list_init (&t->ct_list);
 #endif
 
   old_level = intr_disable ();
