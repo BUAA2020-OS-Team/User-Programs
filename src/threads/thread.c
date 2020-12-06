@@ -482,11 +482,19 @@ init_thread (struct thread *t, const char *name, int priority)
 #ifdef USERPROG
   sema_init(&t->some_semaphore, 0);
   sema_init(&t->wait_exec, 0);
+  t->cur_waitpid = 0;
   if (t != init_thread)
+  {
     t->parent = running_thread ();
+    stuct cthread *ct;
+    ct->cthread = t;
+    ct->exit_status = 16;
+    list_push_back (&t->parent->ct_list, &ct->ctelem);
+  }
   t->fd = 1;
   t->child_status = 0;
   list_init (&t->file_list);
+  list_init (&t->child_list);
 #endif
 
   old_level = intr_disable ();

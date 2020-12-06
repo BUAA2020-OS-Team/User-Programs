@@ -117,7 +117,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     {
       // Implement syscall WAIT
       pid_t pid = *((pid_t*)f->esp + 1);
-      process_wait(pid);
+      f->eax = wait(pid);
       break;
     }
     case SYS_CREATE:
@@ -202,7 +202,21 @@ static void halt (void)
 void exit (int status) 
 {
   printf ("%s: exit(%d)\n", thread_current()->name, status);
-  sema_up(&thread_current()->parent->some_semaphore);
+
+  for (e = list_begin (&thread_current()->parent->ct_list); e != list_end (&thread_current()->parent->ct_list);
+      e = list_next (e))
+    {
+      struct cthread *ct = list_entry (e, struct cthread, ctelem);
+      if (ct->tid == child_tid) 
+        {
+          ct->exit_status = status;
+          break;
+        }     
+    }
+
+  if (&thread_current()->parent->cur_waitpid == &thread_current()->tid)
+    sema_up(&thread_current()->parent->some_semaphore);
+
   thread_exit();
 }
 
@@ -223,6 +237,33 @@ static pid_t exec (char *cmd_line)
   pid_t pid = process_execute (cmd_line);
   lock_release (&rox_lock);
   return pid;
+}
+
+static int wait (pid_t pid) 
+{
+  if (thread_current()->cur_waitpid != 0)
+    return -1;
+  else 
+    thread_current()->cur_waitpid = (tid_t)pid;
+
+  struct list_elem *e;
+  bool isChild = false;
+
+  for (e = list_begin (&thread_current()->ct_list); e != list_end (&thread_current()->ct_list);
+      e = list_next (e))
+    {
+      struct cthread *ct = list_entry (e, struct cthread, ctelem);
+      if (ct->cthread->tid == (tid_t)pid)
+        isChild = true;
+    }
+  if (!isChild)
+    return -1;
+
+  while (!sema_try_down(&thread_current()->some_semaphore)) 
+      if (process_wait((tid_t)pid) == -1)
+        break;
+  thread_current()->cur_waitpid = 0;
+  return process_wait((tid_t)pid);
 }
 
 static bool create (char *file, int initial_size) 

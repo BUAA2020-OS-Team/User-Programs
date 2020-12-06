@@ -100,15 +100,29 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
     struct semaphore some_semaphore;    /* 用于实现简单的process_wait */
     struct semaphore wait_exec;         /* 用于等待子进程执行完毕exec */
+    tid_t cur_waitpid;                  /* 当前线程正在等待的线程id */
     struct thread *parent;              /* The parent thread. */
     int fd;                             /* 该线程的文件描述符 */
     struct list file_list;              /* 当前线程打开文件的列表 */
     int child_status;                   /* exec()子进程的运行状态 */
+    struct list ct_list;                /* 当前线程的子线程列表 */
 #endif
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };
+
+/* 记录子进程的信息 */
+#ifdef USERPROG
+   struct cthread 
+   {
+      struct thread *cthread;             /* 子进程tid */
+      int exit_status;                   /* 退出状态, 等于100表示正在运行 */
+      struct list_elem ctelem;           /* 当前线程的子线程列表元素 */
+   }
+#endif
+
+
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.

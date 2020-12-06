@@ -190,16 +190,15 @@ start_process (void *_file_name)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
-process_wait (tid_t child_tid UNUSED) 
+process_wait (tid_t child_tid) 
 {
-  // return -1;
-  sema_down(&thread_current()->some_semaphore);
-  /*
-  while (true)
-  {
-    thread_yield ();
-  }*/
-  return 0;
+  for (e = list_begin (&thread_current()->ct_list); e != list_end (&thread_current()->ct_list);
+      e = list_next (e))
+    {
+      struct cthread *ct = list_entry (e, struct cthread, ctelem);
+      if (ct->tid == child_tid)
+        return ct->exit_status;
+    }
 }
 
 /* Free the current process's resources. */
