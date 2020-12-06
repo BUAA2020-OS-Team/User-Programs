@@ -4,7 +4,6 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
-#include <stdbool.h>
 #include "threads/synch.h"
 
 /* States in a thread's life cycle. */
@@ -120,7 +119,7 @@ struct thread
       struct thread *cthread;             /* 子进程tid */
       int exit_status;                   /* 退出状态, 等于100表示正在运行 */
       struct list_elem ctelem;           /* 当前线程的子线程列表元素 */
-   }
+   };
 #endif
 
 
