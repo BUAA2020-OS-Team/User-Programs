@@ -25,6 +25,7 @@ struct file_fd
 static void syscall_handler (struct intr_frame *);
 static void halt(void);
 static pid_t exec (char *cmd_line);
+static int wait (pid_t pid);
 static bool create (char *file, int initial_size);
 static bool remove (char *file);
 static int open (char *file);
