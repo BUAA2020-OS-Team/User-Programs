@@ -217,7 +217,7 @@ void exit (int status)
         }     
     }
 
-  if (&thread_current()->parent->cur_waitpid == &thread_current()->tid)
+  if (thread_current()->parent->cur_waitpid == thread_current()->tid)
     sema_up(&thread_current()->parent->some_semaphore);
 
   thread_exit();
