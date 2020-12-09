@@ -197,9 +197,16 @@ process_wait (tid_t child_tid)
       e = list_next (e))
     {
       struct cthread *ct = list_entry (e, struct cthread, ctelem);
-      if (ct->cthread->tid == child_tid)
+      if (ct->cthread->tid == child_tid) 
+      {
+        // 添加代码
+        thread_current ()->cur_waitpid = child_tid;
+        sema_down (&thread_current ()->some_semaphore);
+
         return ct->exit_status;
+      }
     }
+  return -1;
 }
 
 /* Free the current process's resources. */
