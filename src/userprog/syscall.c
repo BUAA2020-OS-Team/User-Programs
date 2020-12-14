@@ -22,6 +22,14 @@ struct file_fd
   struct list_elem file_elem;
 };
 
+struct write_thread
+{
+    struct thread *t;
+    struct file *file;
+};
+
+static struct write_thread *wt;
+
 static void syscall_handler (struct intr_frame *);
 static void halt(void);
 static pid_t exec (char *cmd_line);
@@ -203,7 +211,6 @@ static void halt (void)
 void exit (int status) 
 {
   printf ("%s: exit(%d)\n", thread_current()->name, status);
-
   struct list_elem *e;
   struct thread *t = thread_current ();
   for (e = list_begin (&t->parent->ct_list); e != list_end (&t->parent->ct_list);
@@ -216,7 +223,7 @@ void exit (int status)
           break;
         }     
     }
-
+    
   if (thread_current()->parent->cur_waitpid == thread_current()->tid)
     sema_up(&thread_current()->parent->some_semaphore);
 
@@ -249,6 +256,8 @@ static int wait (pid_t pid)
   else 
     thread_current()->cur_waitpid = (tid_t)pid;
 
+  //printf ("%d\n", pid);
+
   struct list_elem *e;
   bool isChild = false;
 
@@ -262,9 +271,9 @@ static int wait (pid_t pid)
   if (!isChild)
     return -1;
 
-  while (!sema_try_down(&thread_current()->some_semaphore)) 
-      if (process_wait((tid_t)pid) == -1)
-        break;
+  // while (!sema_try_down(&thread_current()->some_semaphore)) 
+  //     if (process_wait((tid_t)pid) == -1)
+  //       break;
   thread_current()->cur_waitpid = 0;
   return process_wait((tid_t)pid);
 }
@@ -304,6 +313,7 @@ static int open (char *file)
     ff->file = f;
     ff->fd = fd;
     list_push_back (&thread_current ()->file_list, &ff->file_elem);
+    wt = malloc(sizeof(wt));
     return fd;
   }
 }
@@ -398,8 +408,13 @@ static int write (int fd, void* buffer, unsigned size)
     if (f == NULL)
       return -1;
     lock_acquire (&rox_lock);
-    int res =  file_write (f, buffer, size);
+    if (wt->file == f && wt->t == thread_current ())
+      file_allow_write (f);
+    int res = file_write (f, buffer, size);
+    wt->file = f;
+    wt->t = thread_current ();
     //printf ("%d", res);
+    file_deny_write (f);
     lock_release (&rox_lock);
     return res;
   }
@@ -425,6 +440,7 @@ static void seek (int fd, unsigned position)
   if (f == NULL)
     return;
   file_seek (f, position);
+  file_allow_write (f);
   return ;
 }
 
@@ -469,6 +485,8 @@ static void close (int fd)
   if (f == NULL)
     return ;
   list_remove (&ff->file_elem);
+  file_allow_write (f);
+  free (wt);
   file_close (f);
 }
 
